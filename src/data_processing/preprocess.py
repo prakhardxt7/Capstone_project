@@ -12,30 +12,31 @@ def load_and_preprocess(nykaa_data_file, inventory_data_file, competitor_data_fi
     nykaa_data = pd.read_csv(os.path.join(DATA_DIR, nykaa_data_file))
     inventory_data = pd.read_csv(os.path.join(DATA_DIR, inventory_data_file))
     competitor_data = pd.read_csv(os.path.join(DATA_DIR, competitor_data_file))
-    
-    print(nykaa_data.columns)
-    print(inventory_data.columns)
-    print(competitor_data.columns)
 
-    # Clean Nykaa data (example: remove missing values)
-    nykaa_data.fillna(method='ffill', inplace=True)
+    # Clean Nykaa data (remove missing values)
+    nykaa_data.dropna(inplace=True)  # Remove rows with NaN values
+
+    # Create features for day of the week and month from the 'date' column
     nykaa_data['day_of_week'] = pd.to_datetime(nykaa_data['date']).dt.dayofweek  # Day of the week feature
     nykaa_data['month'] = pd.to_datetime(nykaa_data['date']).dt.month  # Month feature
 
-    # Clean inventory data (example: removing negative stock levels)
+    # Clean inventory data (remove rows where 'initial_stock' is negative)
     inventory_data = inventory_data[inventory_data['initial_stock'] >= 0]
 
-    # Clean competitor data
-    competitor_data.fillna(method='ffill', inplace=True)
+    # Clean competitor data (remove missing values)
+    competitor_data.dropna(inplace=True)  # Remove rows with NaN values
 
     # Merge Nykaa data with inventory data using 'product_id'
-    merged_data = pd.merge(nykaa_data, inventory_data[['product_id', 'initial_stock']], on="product_id", how="left")
+    merged_data = pd.merge(nykaa_data, inventory_data[['product_id', 'initial_stock', 'daily_restock', 'warehouse_id']], on="product_id", how="left")
 
     # Merge with competitor data (assuming 'product_id' is common)
-    merged_data = pd.merge(merged_data, competitor_data[['product_id', 'price']], on="product_id", how="left")
+    merged_data = pd.merge(merged_data, competitor_data[['product_id', 'sales_units', 'price', 'discount', 'stock_level', 
+                                                        'rating', 'is_sale_period', 'holiday', 'weather', 'ad_spend', 
+                                                        'initial_stock', 'daily_restock', 'warehouse_id']], 
+                            on="product_id", how="left")
 
     # Feature engineering: Create price gap feature
-    merged_data['price_gap'] = merged_data['nykaa_price'] - merged_data['price']
+    merged_data['price_gap'] = merged_data['price'] - merged_data['competitor_price']
 
     # Save processed data for further use (model training)
     merged_data.to_csv(os.path.join(DATA_DIR, 'processed_demand_data.csv'), index=False)
