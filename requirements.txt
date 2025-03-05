@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+pandas
+numpy
+xgboost
+keras
+tensorflow
+stable-baselines3
+gymnasium
+selenium
+beautifulsoup4
+sentence-transformers
+requests
+fuzzywuzzy
+googlesearch-python
+webdriver-manager
+pytest
